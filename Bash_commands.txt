@@ -1,0 +1,28 @@
+cat *.txt > abx_res_merged.txt #Combine all summaries into one file
+
+sed -i '/^Gene/d' abx_res_merged.txt #Get rid of lines beginning with gene. Moved to R next.
+
+#Go into R first to get all sample summary, then do:
+sed -i 's/Antibiotic_Resistance_Results\///g' Abx_summary_all_samples.csv
+sed -i 's/_Antibiotic_Resistance_Gene_Summary.txt//g' Abx_summary_all_samples.csv
+
+#Same thing for hits file
+sed -i 's/Antibiotic_Resistance_Results\///g' Abx_summary_hits_all_samples.csv
+sed -i 's/_Antibiotic_Resistance_Gene_Summary.txt//g' Abx_summary_hits_all_samples.csv
+
+
+### Reclassifying ARG using CARD ###
+#Assembly
+megahit \
+-1 zr2514_${g}_R1.fastq.gz \
+-2 zr2514_${g}_R2.fastq.gz \
+-t 8 \
+--min-count 3 \
+--k-list 31,41,51,61,71,81,91,95,101,105,111 \
+--kmin-1pass \
+--min-contig-len 1000 \
+--out-dir ${g}_megahit/
+
+#Annotate resulting assembly
+for i in {1..24}; do rgi main -i ${i}.final.contigs.fa -o ${i}_arg -a DIAMOND --split_prodigal_jobs --clean; done
+
